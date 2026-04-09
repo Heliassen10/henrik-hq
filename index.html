@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Henrik HQ">
+<meta name="theme-color" content="#1D9E75">
+<title>Henrik HQ</title>
+<link rel="manifest" href="manifest.json">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --teal: #1D9E75; --teal-light: #E1F5EE; --teal-dark: #0F6E56;
+    --blue: #378ADD; --blue-light: #E6F1FB;
+    --amber: #BA7517; --amber-light: #FAEEDA;
+    --coral: #D85A30; --coral-light: #FAECE7;
+    --purple: #534AB7; --purple-light: #EEEDFE;
+    --gray: #888780; --gray-light: #F1EFE8;
+    --text: #1a1a1a; --text-muted: #666; --text-hint: #999;
+    --bg: #f5f5f3; --surface: #fff; --border: rgba(0,0,0,0.08);
+    --radius: 14px; --radius-sm: 8px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --teal: #5DCAA5; --teal-light: #085041; --teal-dark: #9FE1CB;
+      --blue: #85B7EB; --blue-light: #0C447C;
+      --amber: #EF9F27; --amber-light: #633806;
+      --coral: #F0997B; --coral-light: #712B13;
+      --purple: #AFA9EC; --purple-light: #3C3489;
+      --gray: #B4B2A9; --gray-light: #444441;
+      --text: #f0f0ee; --text-muted: #aaa; --text-hint: #777;
+      --bg: #1a1a18; --surface: #242422; --border: rgba(255,255,255,0.08);
+    }
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  
+  /* NAV */
+  .nav { position: sticky; top: 0; z-index: 100; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; overflow-x: auto; scrollbar-width: none; }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav-btn { flex-shrink: 0; padding: 14px 18px; font-size: 13px; font-weight: 500; border: none; background: none; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; transition: color .2s, border-color .2s; white-space: nowrap; }
+  .nav-btn.active { color: var(--teal); border-bottom-color: var(--teal); }
+  .nav-btn .icon { font-size: 16px; display: block; margin-bottom: 2px; }
+  
+  /* HEADER */
+  .header { padding: 20px 16px 8px; }
+  .header-greeting { font-size: 22px; font-weight: 600; }
+  .header-sub { font-size: 14px; color: var(--text-muted); margin-top: 2px; }
+  
+  /* PAGES */
+  .page { display: none; padding: 0 16px 100px; }
+  .page.active { display: block; }
+  
+  /* CARDS */
+  .card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 16px; margin-bottom: 12px; }
+  .card-title { font-size: 13px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 12px; }
+  
+  /* METRIC ROW */
+  .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+  .metric { background: var(--surface); border-radius: var(--radius-sm); border: 1px solid var(--border); padding: 12px; text-align: center; }
+  .metric-val { font-size: 22px; font-weight: 600; }
+  .metric-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  
+  /* ITEMS */
+  .item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .item:last-child { border-bottom: none; }
+  .item-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .item-main { flex: 1; font-size: 15px; }
+  .item-sub { font-size: 12px; color: var(--text-muted); }
+  .item-badge { font-size: 11px; padding: 3px 8px; border-radius: 20px; font-weight: 500; flex-shrink: 0; }
+  
+  /* BADGE COLORS */
+  .badge-teal { background: var(--teal-light); color: var(--teal); }
+  .badge-amber { background: var(--amber-light); color: var(--amber); }
+  .badge-blue { background: var(--blue-light); color: var(--blue); }
+  .badge-coral { background: var(--coral-light); color: var(--coral); }
+  .badge-purple { background: var(--purple-light); color: var(--purple); }
+  
+  /* CHECKBOX */
+  .check-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .check-item:last-child { border-bottom: none; }
+  .check-box { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all .2s; }
+  .check-box.done { background: var(--teal); border-color: var(--teal); }
+  .check-box.done::after { content: '✓'; color: #fff; font-size: 11px; font-weight: 700; }
+  .check-text { flex: 1; font-size: 15px; }
+  .check-text.done { color: var(--text-hint); text-decoration: line-through; }
+  
+  /* AI CHAT */
+  .ai-box { background: var(--blue-light); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 12px; position: relative; }
+  .ai-label { font-size: 11px; font-weight: 600; color: var(--blue); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+  .ai-text { font-size: 14px; line-height: 1.6; color: var(--text); }
+  
+  /* PROGRESS BAR */
+  .progress-wrap { background: var(--gray-light); border-radius: 4px; height: 6px; overflow: hidden; }
+  .progress-bar { height: 100%; border-radius: 4px; transition: width .5s; }
+  
+  /* INPUT */
+  .input-row { display: flex; gap: 8px; margin-top: 12px; }
+  .input-field { flex: 1; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--text); font-size: 15px; outline: none; }
+  .input-field:focus { border-color: var(--teal); }
+  .btn { padding: 10px 16px; border-radius: var(--radius-sm); border: none; background: var(--teal); color: #fff; font-size: 14px; font-weight: 500; cursor: pointer; }
+  .btn:active { opacity: .8; }
+  .btn-outline { background: none; border: 1px solid var(--border); color: var(--text); }
+  
+  /* CALENDAR */
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 12px; }
+  .cal-day-label { text-align: center; font-size: 11px; color: var(--text-muted); font-weight: 500; padding-bottom: 4px; }
+  .cal-day { text-align: center; padding: 8px 4px; font-size: 13px; border-radius: 50%; cursor: pointer; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+  .cal-day.today { background: var(--teal); color: #fff; font-weight: 600; }
+  .cal-day.has-event::after { content: ''; display: block; width: 4px; height: 4px; border-radius: 50%; background: var(--coral); margin: 1px auto 0; }
+  .cal-day.today.has-event::after { background: rgba(255,255,255,0.7); }
+  
+  /* SLEEP */
+  .sleep-bars { display: flex; align-items: flex-end; gap: 6px; height: 60px; margin: 8px 0; }
+  .sleep-bar { flex: 1; border-radius: 3px 3px 0 0; background: var(--teal); opacity: .7; transition: opacity .2s; }
+  .sleep-bar.tonight { opacity: 1; }
+  .sleep-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-hint); }
+  
+  /* LOADING */
+  .loading { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--teal); border-radius: 50%; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* SECTION SEP */
+  .section-header { font-size: 13px; font-weight: 600; color: var(--text-muted); margin: 20px 0 8px; text-transform: uppercase; letter-spacing: .04em; }
+
+  /* FLOATING ADD BTN */
+  .fab { position: fixed; bottom: 24px; right: 20px; width: 52px; height: 52px; border-radius: 50%; background: var(--teal); color: #fff; font-size: 24px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(29,158,117,0.35); z-index: 50; }
+</style>
+</head>
+<body>
+
+<nav class="nav" id="nav">
+  <button class="nav-btn active" onclick="showPage('hjem')" data-page="hjem"><span class="icon">🏠</span>Hjem</button>
+  <button class="nav-btn" onclick="showPage('trening')" data-page="trening"><span class="icon">🏃</span>Trening</button>
+  <button class="nav-btn" onclick="showPage('kosthold')" data-page="kosthold"><span class="icon">🥗</span>Kosthold</button>
+  <button class="nav-btn" onclick="showPage('kalender')" data-page="kalender"><span class="icon">📅</span>Kalender</button>
+  <button class="nav-btn" onclick="showPage('penger')" data-page="penger"><span class="icon">📈</span>Penger</button>
+  <button class="nav-btn" onclick="showPage('nyheter')" data-page="nyheter"><span class="icon">📰</span>Nyheter</button>
+  <button class="nav-btn" onclick="showPage('leilighet')" data-page="leilighet"><span class="icon">🏠</span>Leilighet</button>
+</nav>
+
+<!-- ===== HJEM ===== -->
+<div class="page active" id="page-hjem">
+  <div class="header">
+    <div class="header-greeting" id="greeting">God morgen, Henrik! 👋</div>
+    <div class="header-sub" id="date-display"></div>
+  </div>
+
+  <div class="metrics">
+    <div class="metric">
+      <div class="metric-val" style="color:var(--teal)" id="steps-val">–</div>
+      <div class="metric-label">km i dag</div>
+    </div>
+    <div class="metric">
+      <div class="metric-val" style="color:var(--blue)" id="sleep-val">7.4t</div>
+      <div class="metric-label">søvn</div>
+    </div>
+    <div class="metric">
+      <div class="metric-val" style="color:var(--amber)" id="tasks-val">4</div>
+      <div class="metric-label">oppgaver</div>
+    </div>
+  </div>
+
+  <div class="ai-box" id="ai-morning">
+    <div class="ai-label">✦ AI morgenbriefing</div>
+    <div class="ai-text" id="morning-text"><span class="loading"></span></div>
+  </div>
+
+  <div class="section-header">I dag</div>
+  <div class="card">
+    <div id="today-list">
+      <div class="item"><div class="item-dot" style="background:var(--teal)"></div><div><div class="item-main">Intervalløkt – 8×400m</div><div class="item-sub">07:00 · Løping BCM-prep</div></div><div class="item-badge badge-teal">Trening</div></div>
+      <div class="item"><div class="item-dot" style="background:var(--blue)"></div><div><div class="item-main">BI forelesning</div><div class="item-sub">10:15 · BI Campus</div></div><div class="item-badge badge-blue">Studie</div></div>
+      <div class="item"><div class="item-dot" style="background:var(--amber)"></div><div><div class="item-main">DNB – møte rapport</div><div class="item-sub">14:00</div></div><div class="item-badge badge-amber">Jobb</div></div>
+      <div class="item"><div class="item-dot" style="background:var(--coral)"></div><div><div class="item-main">Betale strømregning</div><div class="item-sub">Forfall i dag!</div></div><div class="item-badge badge-coral">Viktig</div></div>
+    </div>
+  </div>
+
+  <div class="section-header">BCM halvmaraton – fremgang</div>
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+      <span style="font-size:14px; font-weight:500;">Uker igjen</span>
+      <span style="font-size:14px; color:var(--teal); font-weight:600;">6 uker</span>
+    </div>
+    <div class="progress-wrap"><div class="progress-bar" style="width:65%; background:var(--teal)"></div></div>
+    <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">65% av treningsplanen fullført</div>
+  </div>
+</div>
+
+<!-- ===== TRENING ===== -->
+<div class="page" id="page-trening">
+  <div class="header">
+    <div class="header-greeting">Treningsoversikt</div>
+    <div class="header-sub">BCM Halvmaraton – program</div>
+  </div>
+
+  <div class="ai-box" id="ai-training">
+    <div class="ai-label">✦ AI treningsrådgiver</div>
+    <div class="ai-text" id="training-ai-text"><span class="loading"></span></div>
+  </div>
+
+  <div class="metrics">
+    <div class="metric"><div class="metric-val" style="color:var(--teal)">42</div><div class="metric-label">km denne uken</div></div>
+    <div class="metric"><div class="metric-val" style="color:var(--coral)">148</div><div class="metric-label">puls snitt</div></div>
+    <div class="metric"><div class="metric-val" style="color:var(--blue)">5:12</div><div class="metric-label">snittpace</div></div>
+  </div>
+
+  <div class="section-header">Denne uken</div>
+  <div class="card">
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box done"></div><div><div class="check-text done">Mandag – Lett jogg 8km</div><div style="font-size:12px;color:var(--text-muted)">Sone 2 · 55 min</div></div></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box done"></div><div><div class="check-text done">Tirsdag – Styrke + core</div><div style="font-size:12px;color:var(--text-muted)">45 min</div></div></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div><div class="check-text">Onsdag – Intervalløkt 8×400m</div><div style="font-size:12px;color:var(--text-muted)">Sone 4-5 · 50 min</div></div></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div><div class="check-text">Torsdag – Hvile / yoga</div><div style="font-size:12px;color:var(--text-muted)">Recovery</div></div></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div><div class="check-text">Fredag – Tempoøkt 12km</div><div style="font-size:12px;color:var(--text-muted)">Halvmaratonfart · 65 min</div></div></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div><div class="check-text">Lørdag – Langtur 20km</div><div style="font-size:12px;color:var(--text-muted)">Sone 2 · 1t 50min</div></div></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div><div class="check-text">Søndag – Hvile</div><div style="font-size:12px;color:var(--text-muted)">Aktiv restitusjon</div></div></div>
+  </div>
+
+  <div class="section-header">Søvn siste 7 dager</div>
+  <div class="card">
+    <div class="sleep-bars">
+      <div class="sleep-bar" style="height:75%"></div>
+      <div class="sleep-bar" style="height:88%"></div>
+      <div class="sleep-bar" style="height:60%"></div>
+      <div class="sleep-bar" style="height:95%"></div>
+      <div class="sleep-bar" style="height:80%"></div>
+      <div class="sleep-bar" style="height:70%"></div>
+      <div class="sleep-bar tonight" style="height:85%"></div>
+    </div>
+    <div class="sleep-labels"><span>Ma</span><span>Ti</span><span>On</span><span>To</span><span>Fr</span><span>Lø</span><span>Sø</span></div>
+    <div style="margin-top:10px; font-size:13px; color:var(--text-muted)">Snitt: <strong style="color:var(--text)">7.4 timer</strong> · Anbefalt for triatlon: 8–9t</div>
+  </div>
+
+  <div class="section-header">Spør AI treningscoach</div>
+  <div class="card">
+    <div class="input-row">
+      <input class="input-field" id="training-q" placeholder="F.eks. 'Kan jeg bytte lørdagsøkten?'" />
+      <button class="btn" onclick="askTrainingAI()">Spør</button>
+    </div>
+    <div id="training-answer" style="margin-top:12px; font-size:14px; line-height:1.6; display:none;"></div>
+  </div>
+</div>
+
+<!-- ===== KOSTHOLD ===== -->
+<div class="page" id="page-kosthold">
+  <div class="header">
+    <div class="header-greeting">Kosthold & Ernæring</div>
+    <div class="header-sub">Tilpasset halvmaratontrening</div>
+  </div>
+
+  <div class="ai-box">
+    <div class="ai-label">✦ AI kostholdsveileder</div>
+    <div class="ai-text" id="food-ai-text"><span class="loading"></span></div>
+  </div>
+
+  <div class="metrics">
+    <div class="metric"><div class="metric-val" style="color:var(--coral)">2650</div><div class="metric-label">kcal mål</div></div>
+    <div class="metric"><div class="metric-val" style="color:var(--teal)">165g</div><div class="metric-label">protein</div></div>
+    <div class="metric"><div class="metric-val" style="color:var(--blue)">320g</div><div class="metric-label">karbohydrat</div></div>
+  </div>
+
+  <div class="section-header">Dagens måltider</div>
+  <div class="card">
+    <div class="item"><div class="item-dot" style="background:var(--amber)"></div><div><div class="item-main">Frokost – Havregrøt + bær</div><div class="item-sub">07:00 · 520 kcal · 18g protein</div></div><div class="item-badge badge-teal">Spist</div></div>
+    <div class="item"><div class="item-dot" style="background:var(--teal)"></div><div><div class="item-main">Lunsj – Kylling & ris</div><div class="item-sub">12:30 · 680 kcal · 48g protein</div></div><div class="item-badge badge-teal">Spist</div></div>
+    <div class="item"><div class="item-dot" style="background:var(--blue)"></div><div><div class="item-main">Mellommåltid – Banan + nøtter</div><div class="item-sub">15:30 · 280 kcal</div></div><div class="item-badge badge-amber">Planlagt</div></div>
+    <div class="item"><div class="item-dot" style="background:var(--coral)"></div><div><div class="item-main">Middag – Laks & søtpotet</div><div class="item-sub">18:30 · 750 kcal · 42g protein</div></div><div class="item-badge badge-amber">Planlagt</div></div>
+  </div>
+
+  <div class="section-header">Handleliste denne uken</div>
+  <div class="card" id="shopping-list">
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text">Havre (1kg)</div></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text">Kyllingfilet (1kg)</div></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box done"></div><div class="check-text done">Laks (600g)</div></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text">Søtpotet (4 stk)</div></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text">Blåbær & jordbær (frosset)</div></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box done"></div><div class="check-text done">Gresk yoghurt 0%</div></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text">Mandler (200g)</div></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text">Egg (12pk)</div></div>
+  </div>
+
+  <div class="section-header">Spør AI kostholdsveileder</div>
+  <div class="card">
+    <div class="input-row">
+      <input class="input-field" id="food-q" placeholder="'Hva bør jeg spise før langtur?'" />
+      <button class="btn" onclick="askFoodAI()">Spør</button>
+    </div>
+    <div id="food-answer" style="margin-top:12px; font-size:14px; line-height:1.6; display:none;"></div>
+  </div>
+</div>
+
+<!-- ===== KALENDER ===== -->
+<div class="page" id="page-kalender">
+  <div class="header">
+    <div class="header-greeting">Kalender</div>
+    <div class="header-sub" id="cal-month-label"></div>
+  </div>
+
+  <div class="card">
+    <div class="cal-grid" id="cal-labels"></div>
+    <div class="cal-grid" id="cal-grid"></div>
+  </div>
+
+  <div class="section-header">Kommende hendelser</div>
+  <div class="card">
+    <div class="item"><div class="item-dot" style="background:var(--teal)"></div><div><div class="item-main">BCM Halvmaraton</div><div class="item-sub">24. mai 2025 · Bergen</div></div><div class="item-badge badge-teal">Løp</div></div>
+    <div class="item"><div class="item-dot" style="background:var(--blue)"></div><div><div class="item-main">BI Eksamen – Makroøkonomi</div><div class="item-sub">15. mai</div></div><div class="item-badge badge-blue">Studie</div></div>
+    <div class="item"><div class="item-dot" style="background:var(--amber)"></div><div><div class="item-main">DNB kvartalsmøte</div><div class="item-sub">28. april</div></div><div class="item-badge badge-amber">Jobb</div></div>
+    <div class="item"><div class="item-dot" style="background:var(--coral)"></div><div><div class="item-main">Husleie forfall</div><div class="item-sub">1. mai</div></div><div class="item-badge badge-coral">Betaling</div></div>
+  </div>
+
+  <div class="section-header">Legg til hendelse</div>
+  <div class="card">
+    <input class="input-field" id="new-event" placeholder="Hendelse..." style="width:100%; margin-bottom:8px;" />
+    <div class="input-row">
+      <input class="input-field" id="new-event-date" type="date" style="flex:1;" />
+      <button class="btn" onclick="addEvent()">Legg til</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PENGER ===== -->
+<div class="page" id="page-penger">
+  <div class="header">
+    <div class="header-greeting">Økonomi & Investering</div>
+    <div class="header-sub">Aksjer · Bolig · Budsjett</div>
+  </div>
+
+  <div class="ai-box">
+    <div class="ai-label">✦ AI finansrådgiver</div>
+    <div class="ai-text" id="finance-ai-text"><span class="loading"></span></div>
+  </div>
+
+  <div class="metrics">
+    <div class="metric"><div class="metric-val" style="color:var(--teal); font-size:16px;">+3.2%</div><div class="metric-label">portefølje</div></div>
+    <div class="metric"><div class="metric-val" style="color:var(--blue); font-size:16px;">4.6%</div><div class="metric-label">boliglånsrente</div></div>
+    <div class="metric"><div class="metric-val" style="color:var(--amber); font-size:16px;">14k</div><div class="metric-label">spart i mnd</div></div>
+  </div>
+
+  <div class="section-header">Månedlig budsjett</div>
+  <div class="card">
+    <div class="item"><div><div class="item-main">Inntekt (DNB 35% + stipend)</div></div><div style="font-weight:600; color:var(--teal)">+22 500 kr</div></div>
+    <div class="item"><div><div class="item-main">Husleie / fellesutgifter</div></div><div style="font-weight:600; color:var(--coral)">-8 200 kr</div></div>
+    <div class="item"><div><div class="item-main">Mat & dagligvarer</div></div><div style="font-weight:600; color:var(--coral)">-3 500 kr</div></div>
+    <div class="item"><div><div class="item-main">Transport</div></div><div style="font-weight:600; color:var(--coral)">-1 200 kr</div></div>
+    <div class="item"><div><div class="item-main">Treningsutstyr / løp</div></div><div style="font-weight:600; color:var(--coral)">-800 kr</div></div>
+    <div class="item"><div><div class="item-main" style="font-weight:600;">Til sparing/investering</div></div><div style="font-weight:700; color:var(--teal)">+14 000 kr</div></div>
+  </div>
+
+  <div class="section-header">Aksjer å følge</div>
+  <div class="card">
+    <div class="item"><div><div class="item-main">Equinor (EQNR)</div><div class="item-sub">Oslo Børs</div></div><div style="text-align:right"><div style="font-weight:600; color:var(--teal)">+1.8%</div><div style="font-size:12px; color:var(--text-muted)">274 kr</div></div></div>
+    <div class="item"><div><div class="item-main">DNB ASA</div><div class="item-sub">Oslo Børs</div></div><div style="text-align:right"><div style="font-weight:600; color:var(--teal)">+0.5%</div><div style="font-size:12px; color:var(--text-muted)">212 kr</div></div></div>
+    <div class="item"><div><div class="item-main">S&P 500 ETF</div><div class="item-sub">USD · Globalt</div></div><div style="text-align:right"><div style="font-weight:600; color:var(--coral)">-0.3%</div><div style="font-size:12px; color:var(--text-muted)">510 USD</div></div></div>
+  </div>
+
+  <div class="section-header">Spør AI om økonomi</div>
+  <div class="card">
+    <div class="input-row">
+      <input class="input-field" id="finance-q" placeholder="'Er det lurt å refinansiere nå?'" />
+      <button class="btn" onclick="askFinanceAI()">Spør</button>
+    </div>
+    <div id="finance-answer" style="margin-top:12px; font-size:14px; line-height:1.6; display:none;"></div>
+  </div>
+</div>
+
+<!-- ===== NYHETER ===== -->
+<div class="page" id="page-nyheter">
+  <div class="header">
+    <div class="header-greeting">Nyheter & Innsikt</div>
+    <div class="header-sub">Økonomi · Sport · Norge</div>
+  </div>
+
+  <div class="ai-box">
+    <div class="ai-label">✦ AI nyhetssammendrag</div>
+    <div class="ai-text" id="news-ai-text"><span class="loading"></span></div>
+  </div>
+
+  <div class="section-header">Spør om nyheter</div>
+  <div class="card">
+    <div class="input-row">
+      <input class="input-field" id="news-q" placeholder="'Siste nytt om rentebeslutning?'" />
+      <button class="btn" onclick="askNewsAI()">Søk</button>
+    </div>
+    <div id="news-answer" style="margin-top:12px; font-size:14px; line-height:1.6; display:none;"></div>
+  </div>
+</div>
+
+<!-- ===== LEILIGHET ===== -->
+<div class="page" id="page-leilighet">
+  <div class="header">
+    <div class="header-greeting">Leiligheten min</div>
+    <div class="header-sub">Regninger · Oppgaver · Bolig</div>
+  </div>
+
+  <div class="section-header">Regninger denne måneden</div>
+  <div class="card">
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box done"></div><div><div class="check-text done">Husleie – 8 200 kr</div><div style="font-size:12px;color:var(--text-muted)">Betalt 1. april</div></div></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div><div class="check-text" style="color:var(--coral)">Strøm – 840 kr ⚠ Forfall i dag!</div><div style="font-size:12px;color:var(--text-muted)">9. april</div></div></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box done"></div><div><div class="check-text done">Internett – 399 kr</div><div style="font-size:12px;color:var(--text-muted)">Betalt</div></div></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div><div class="check-text">Forsikring – 320 kr</div><div style="font-size:12px;color:var(--text-muted)">Forfall 15. april</div></div></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div><div class="check-text">Fellesutgifter – 950 kr</div><div style="font-size:12px;color:var(--text-muted)">Forfall 20. april</div></div></div>
+  </div>
+
+  <div class="section-header">Gjøremål hjemme</div>
+  <div class="card" id="home-todos">
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text">Vaske bad</div></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box done"></div><div class="check-text done">Handle dagligvarer</div></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text">Støvsuge</div></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text">Bytte sengetøy</div></div>
+  </div>
+
+  <div class="section-header">Legg til gjøremål</div>
+  <div class="card">
+    <div class="input-row">
+      <input class="input-field" id="new-todo" placeholder="Nytt gjøremål..." />
+      <button class="btn" onclick="addTodo()">Legg til</button>
+    </div>
+  </div>
+
+  <div class="section-header">Spør AI om leiligheten</div>
+  <div class="card">
+    <div class="input-row">
+      <input class="input-field" id="home-q" placeholder="'Hvilken boligforsikring er best?'" />
+      <button class="btn" onclick="askHomeAI()">Spør</button>
+    </div>
+    <div id="home-answer" style="margin-top:12px; font-size:14px; line-height:1.6; display:none;"></div>
+  </div>
+</div>
+
+<script>
+// ===== NAV =====
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.querySelector(`[data-page="${id}"]`).classList.add('active');
+  if (!aiLoaded[id]) loadAI(id);
+}
+
+// ===== DATE / GREETING =====
+function initDate() {
+  const now = new Date();
+  const h = now.getHours();
+  let greet = h < 12 ? 'God morgen' : h < 17 ? 'God ettermiddag' : 'God kveld';
+  document.getElementById('greeting').textContent = greet + ', Henrik! 👋';
+  const days = ['søndag','mandag','tirsdag','onsdag','torsdag','fredag','lørdag'];
+  const months = ['januar','februar','mars','april','mai','juni','juli','august','september','oktober','november','desember'];
+  document.getElementById('date-display').textContent = days[now.getDay()] + ' ' + now.getDate() + '. ' + months[now.getMonth()] + ' ' + now.getFullYear();
+}
+
+// ===== CALENDAR =====
+function buildCalendar() {
+  const now = new Date();
+  const months = ['Januar','Februar','Mars','April','Mai','Juni','Juli','August','September','Oktober','November','Desember'];
+  document.getElementById('cal-month-label').textContent = months[now.getMonth()] + ' ' + now.getFullYear();
+  const labels = ['Ma','Ti','On','To','Fr','Lø','Sø'];
+  const labelEl = document.getElementById('cal-labels');
+  labels.forEach(l => { const d = document.createElement('div'); d.className = 'cal-day-label'; d.textContent = l; labelEl.appendChild(d); });
+  const grid = document.getElementById('cal-grid');
+  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+  let startOffset = firstDay.getDay() - 1; if (startOffset < 0) startOffset = 6;
+  for (let i = 0; i < startOffset; i++) { const e = document.createElement('div'); grid.appendChild(e); }
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const eventDays = [9, 15, 24, 28]; // Example event days
+  for (let d = 1; d <= daysInMonth; d++) {
+    const el = document.createElement('div');
+    el.className = 'cal-day';
+    if (d === now.getDate()) el.classList.add('today');
+    if (eventDays.includes(d)) el.classList.add('has-event');
+    el.textContent = d;
+    grid.appendChild(el);
+  }
+}
+
+// ===== CHECKBOX =====
+function toggleCheck(el) {
+  const box = el.querySelector('.check-box');
+  const text = el.querySelector('.check-text');
+  box.classList.toggle('done');
+  if (text) text.classList.toggle('done');
+}
+
+// ===== ADD TODO =====
+function addTodo() {
+  const input = document.getElementById('new-todo');
+  if (!input.value.trim()) return;
+  const list = document.getElementById('home-todos');
+  const item = document.createElement('div');
+  item.className = 'check-item';
+  item.onclick = function() { toggleCheck(this); };
+  item.innerHTML = `<div class="check-box"></div><div class="check-text">${input.value}</div>`;
+  list.appendChild(item);
+  input.value = '';
+}
+
+// ===== ADD EVENT =====
+function addEvent() {
+  const name = document.getElementById('new-event').value.trim();
+  const date = document.getElementById('new-event-date').value;
+  if (!name) return;
+  document.getElementById('new-event').value = '';
+  document.getElementById('new-event-date').value = '';
+  alert('Hendelse lagt til: ' + name + (date ? ' – ' + date : ''));
+}
+
+// ===== AI CALLS =====
+const aiLoaded = { hjem: false, trening: false, kosthold: false, penger: false, nyheter: false, leilighet: false };
+
+async function callClaude(systemPrompt, userPrompt) {
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 1000,
+      system: systemPrompt,
+      messages: [{ role: "user", content: userPrompt }]
+    })
+  });
+  const data = await response.json();
+  if (data.content && data.content[0]) return data.content[0].text;
+  return "Kunne ikke hente svar akkurat nå.";
+}
+
+async function loadAI(page) {
+  aiLoaded[page] = true;
+  const now = new Date();
+  const dayName = ['søndag','mandag','tirsdag','onsdag','torsdag','fredag','lørdag'][now.getDay()];
+
+  if (page === 'hjem') {
+    try {
+      const text = await callClaude(
+        "Du er en personlig AI-assistent for Henrik Hodne Eliassen, BI-student, DNB-ansatt 35%, aktiv langdistanseløper som trener mot BCM halvmaraton. Svar alltid på norsk. Vær konkret, kort og motiverende. Maks 3 setninger.",
+        `Det er ${dayName} morgen. Gi en rask daglig briefing: en treningskommentar, en økonomi/studie-påminnelse, og en motivasjonssetning for BCM-treningen.`
+      );
+      document.getElementById('morning-text').textContent = text;
+    } catch(e) { document.getElementById('morning-text').textContent = "Hei Henrik! Husk intervalløkten i dag – du er på god vei mot BCM!"; }
+  }
+
+  if (page === 'trening') {
+    try {
+      const text = await callClaude(
+        "Du er Henriks personlige treningscoach. Henrik er eks-triatlon landslagsutøver og trener nå mot BCM halvmaraton om 6 uker. Han trener daglig. Svar på norsk, max 3 setninger.",
+        `Det er ${dayName}. Gi et kort råd om ukens viktigste fokus for halvmaratonformen hans nå 6 uker ut.`
+      );
+      document.getElementById('training-ai-text').textContent = text;
+    } catch(e) { document.getElementById('training-ai-text').textContent = "6 uker igjen – fokuser på fart og vedlikehold. Ikke overbelast kroppen."; }
+  }
+
+  if (page === 'kosthold') {
+    try {
+      const text = await callClaude(
+        "Du er Henriks AI-kostholdsveileder. Han er en aktiv halvmaratonløper med mål om 2650 kcal/dag, 165g protein. Svar på norsk, max 3 setninger.",
+        "Gi ett konkret kostholdstips for en idrettsutøver som trener halvmaraton, og en enkel oppskriftsidé til middag i dag."
+      );
+      document.getElementById('food-ai-text').textContent = text;
+    } catch(e) { document.getElementById('food-ai-text').textContent = "Sørg for karbohydrater etter intervalløkt i dag. Laks med søtpotet er et perfekt restitusjonsmåltid."; }
+  }
+
+  if (page === 'penger') {
+    try {
+      const text = await callClaude(
+        "Du er Henriks AI-finansrådgiver. Han er BI-student, jobber 35% i DNB, eier leilighet og er interessert i aksjer og boliginvestering. Svar på norsk, max 3 setninger. IKKE gi konkrete investeringsanbefalinger.",
+        "Gi ett generelt tips om sparing/investering som er relevant for en ung student-investor med leilighet og aksjeinteresse akkurat nå."
+      );
+      document.getElementById('finance-ai-text').textContent = text;
+    } catch(e) { document.getElementById('finance-ai-text').textContent = "Som ung investor er tid din største fordel. Månedlig sparing i bredt indeksfond er en solid strategi ved siden av boliginvesteringen."; }
+  }
+
+  if (page === 'nyheter') {
+    try {
+      const text = await callClaude(
+        "Du er Henriks nyhetsassistent. Han er interessert i norsk økonomi, renter, aksjer, og norsk idrett (spesielt løping og triathlon). Svar på norsk, max 4 setninger.",
+        "Gi et kort sammendrag av hva som er viktig å følge med på i norsk økonomi og finansmarkedene akkurat nå generelt, og nevn evt. relevante sportsbegivenheter."
+      );
+      document.getElementById('news-ai-text').textContent = text;
+    } catch(e) { document.getElementById('news-ai-text').textContent = "Følg med på Norges Banks rentebeslutninger og OSEBX. Spør meg gjerne om spesifikke nyheter."; }
+  }
+}
+
+async function askTrainingAI() {
+  const q = document.getElementById('training-q').value;
+  if (!q) return;
+  const ans = document.getElementById('training-answer');
+  ans.style.display = 'block';
+  ans.innerHTML = '<span class="loading"></span>';
+  try {
+    const text = await callClaude(
+      "Du er Henriks personlige treningscoach. Eks-triatlon landslagutøver, trener nå mot BCM halvmaraton. Svar på norsk, vær konkret.",
+      q
+    );
+    ans.textContent = text;
+  } catch(e) { ans.textContent = "Kunne ikke svare akkurat nå."; }
+}
+
+async function askFoodAI() {
+  const q = document.getElementById('food-q').value;
+  if (!q) return;
+  const ans = document.getElementById('food-answer');
+  ans.style.display = 'block';
+  ans.innerHTML = '<span class="loading"></span>';
+  try {
+    const text = await callClaude(
+      "Du er Henriks AI-kostholdsveileder. Aktiv halvmaratonløper, 2650 kcal mål. Svar på norsk.",
+      q
+    );
+    ans.textContent = text;
+  } catch(e) { ans.textContent = "Kunne ikke svare akkurat nå."; }
+}
+
+async function askFinanceAI() {
+  const q = document.getElementById('finance-q').value;
+  if (!q) return;
+  const ans = document.getElementById('finance-answer');
+  ans.style.display = 'block';
+  ans.innerHTML = '<span class="loading"></span>';
+  try {
+    const text = await callClaude(
+      "Du er Henriks AI-finansassistent. Gi generell informasjon og perspektiver. Alltid nevn at dette ikke er finansiell rådgivning. Svar på norsk.",
+      q
+    );
+    ans.textContent = text;
+  } catch(e) { ans.textContent = "Kunne ikke svare akkurat nå."; }
+}
+
+async function askNewsAI() {
+  const q = document.getElementById('news-q').value;
+  if (!q) return;
+  const ans = document.getElementById('news-answer');
+  ans.style.display = 'block';
+  ans.innerHTML = '<span class="loading"></span>';
+  try {
+    const text = await callClaude(
+      "Du er Henriks nyhetsassistent, ekspert på norsk økonomi og idrett. Svar på norsk.",
+      q
+    );
+    ans.textContent = text;
+  } catch(e) { ans.textContent = "Kunne ikke svare akkurat nå."; }
+}
+
+async function askHomeAI() {
+  const q = document.getElementById('home-q').value;
+  if (!q) return;
+  const ans = document.getElementById('home-answer');
+  ans.style.display = 'block';
+  ans.innerHTML = '<span class="loading"></span>';
+  try {
+    const text = await callClaude(
+      "Du er Henriks boligassistent. Han eier en leilighet i Bergen og er interessert i boligeiendom. Svar på norsk.",
+      q
+    );
+    ans.textContent = text;
+  } catch(e) { ans.textContent = "Kunne ikke svare akkurat nå."; }
+}
+
+// ===== INIT =====
+initDate();
+buildCalendar();
+loadAI('hjem');
+</script>
+</body>
+</html>
